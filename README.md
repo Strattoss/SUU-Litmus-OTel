@@ -24,7 +24,7 @@ Litmus can be used to run chaos experiments initially in the staging environment
 
 ### Importance of resilience
 
-Kubernetes is being run on a variety of infrastructure, ranging from virtual machines to bare metal and a combination of them. The platform’s physical nature is a source of faults to the application that runs inside containers, as shown in the tip of the above diagram. The next layer of dependency is Kubernetes itself.
+Kubernetes is being run on a variety of infrastructure, ranging from virtual machines to bare metal and a combination of them. The platform’s physical nature is a source of faults to the application that runs inside containers.
 
 Your application resilience really depends more on the underlying stack than your application itself. It is possible that once your application is stabilized, the resilience of your service that runs on Kubernetes depends on other components and infrastructure more than 90% of the time.
 
