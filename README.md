@@ -39,7 +39,7 @@ As Litmus documentation says: 'Keep verifying is the key. Robust testing before 
 
 - **Fault**. A type of disruption in the application. Examples of faults:
 
-![Chaos faults image](./chaos-faults-image.png)
+![Chaos faults image](./images/chaos-faults-image.png)
 
 - **Blast radius**: the scope or impact zone of the experiment (e.g. one pod, one service, or full namespace).
 
