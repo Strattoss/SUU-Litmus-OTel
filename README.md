@@ -63,11 +63,90 @@ The experiment workflow:
 
 4. Compare KPIs (Key Performance Indicator - A measurable value that shows how well a system is performing, e.g p95 **latency < 500 ms** or  **HTTP 5xx < 1%** )  against the hypothesis and produce a verdict (Pass / Fail).
 
+**Experiment:**
+Introducing 200 ms inter-service network latency to existing microservices cluster. 
+
+![Fault point 1; network latency](./images/fault-point-1.png)
+![Fault point 2; pod deletion](./images/fault-point-2.png)
+
+
 ## 4. Solution architecture
+
+The application will be run on Amazon Web Service leveraging the Elastic Kubernetes Service. The business application, as mentioned in the previous section 1., will be the [SockShop](https://github.com/ocp-power-demos/sock-shop-demo), used widely as a demo application because of its microservice-centered structure. 
+
+SockShop architecture schema:
+
+![Socket shop architecture](./images/socket-shop-architecture.png)
+
+Each SockShop component will have a sidecar provided by [Istio](https://istio.io/), which will be scrapped for the ongoing communication statistics by the metrics collecting backend - [Prometheus](https://prometheus.io/).
+
+In order to visualize the collected metrics, we use Grafana and set it up to work correctly with [Prometheus](https://grafana.com/). Additionally, we use [Kiali](https://kiali.io/) in order to track how the SockShop services communicate and take a peek at the error that we expect to observe when introducing the faults with [Litmus](https://litmuschaos.io/).
+
+In the cluster there are two defined namespaces: sock-shop and istio-system.
+
 
 ## 5. Environment configuration description
 
+Amazon Elastic Kubernetes Service - configuration of the cluster:
+
+![Cluster config 1](./images/cluster-conf-1.png)
+![Cluster config 2](./images/cluster-conf-2.png)
+![Cluster config 3](./images/cluster-conf-3.png)
+![Cluster config 4](./images/cluster-conf-4.png)
+![Cluster config 5](./images/cluster-conf-5.png)
+
+Node group configuration:
+
+![Node group config 1](./images/cluster-group-conf-1.png)
+![Node group config 2](./images/cluster-group-conf-2.png)
+
 ## 6. Installation method
+
+Our demo source:
+```
+git clone https://github.com/litmuschaos/litmus.git
+```
+```bash
+cd litmus/demo/sample-applications/sock-shop
+```
+
+To deploy sock shop and create namespace:
+```bash
+kubectl create ns sock-shop
+```
+```bash
+kubectl apply -f deploy/sock-shop/
+```
+
+For monitoring purposes we are using Istio: https://github.com/istio/istio/releases/tag/1.21.1. To deploy Istio / tools for monitoring, Istio should be started before demo app. If not, the demo app should be redeployed.
+
+```bash
+istioctl manifest apply --set profile=demo
+```
+```bash
+kubectl label namespace sock-shop istio-injection=enabled
+```
+
+To deploy Prometeus:
+```bash
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.21/samples/addons/prometheus.yaml
+```
+
+To deploy Grafana:
+```bash
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.21/samples/addons/grafana.yaml
+```
+
+To deploy Kiali:
+```bash
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.21/samples/addons/kiali.yaml
+```
+
+To open a monitoring apps:
+```bash
+istioctl dashboard <app_name>
+```
+
 
 ## 7. How to reproduce - step by step
 
