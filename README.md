@@ -13,10 +13,11 @@ This document shows how to use Litmus Chaos and OpenTelemetry to test how well a
 | Layer | Technology | Purpose |
 | --- | --- | --- |
 | Chaos | Litmus Chaos | Inject pod‑level & network faults via CRDs (Custom Resource Definition) |
-| Observability | Prometheus Grafana | Collect traces, scrape metrics, display dashboards |
-| Platform | Kubernetes, Helm | Cluster, package manager |
+| Metrics backend | Prometheus | Collect traces, scrape metrics |
+| Metrics visualization | Grafana | Display dashboards |
+| Platform | Kubernetes | Cluster |
 | Application | Sock Shop | Workload under test |
-| Infrastructure as Code | Helm charts, Kustomize | Declarative deployment |
+| Infrastructure as Code | YAML files | Declarative deployment |
 
 LitmusChaos is a Cloud-Native Chaos Engineering Framework with cross-cloud support. It is a CNCF Incubating project with adoption across several organizations. Its mission is to help Kubernetes SREs and Developers to find weaknesses in both Non-Kubernetes as well as platforms and applications running on Kubernetes by providing a complete Chaos Engineering framework and associated Chaos Experiments.
 
@@ -78,11 +79,13 @@ SockShop architecture schema:
 
 ![Socket shop architecture](./images/socket-shop-architecture.png)
 
-Each SockShop component will have a sidecar provided by [Istio](https://istio.io/), which will be scrapped for the ongoing communication statistics by the metrics collecting backend - [Prometheus](https://prometheus.io/).
+Sock shop exporter will be scrapped for the ongoing communication statistics by the metrics collecting backend - [Prometheus](https://prometheus.io/).
 
-In order to visualize the collected metrics, we use Grafana and set it up to work correctly with [Prometheus](https://grafana.com/). Additionally, we use [Kiali](https://kiali.io/) in order to track how the SockShop services communicate and take a peek at the error that we expect to observe when introducing the faults with [Litmus](https://litmuschaos.io/).
+In order to visualize the collected metrics and to observe changes that we expect when introducing the faults with [Litmus](https://litmuschaos.io/), we use [Grafana](https://grafana.com/) and set it up to work correctly with [Prometheus](https://prometheus.io/).
 
-In the cluster there are two defined namespaces: sock-shop and istio-system.
+In the cluster there are two defined namespaces: `sock-shop` and `litmus`.
+
+TODO: insert the whole cluster architecture diagram (with namespaces, litmus pods, experiments, engines, prometheus and grafana)
 
 
 ## 5. Environment configuration description
