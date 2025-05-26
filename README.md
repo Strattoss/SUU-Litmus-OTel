@@ -102,51 +102,67 @@ Node group configuration:
 
 ## 6. Installation method
 
-Our demo source:
-```
+Our demo source code:
+```bash
 git clone https://github.com/litmuschaos/litmus.git
 ```
 ```bash
 cd litmus/demo/sample-applications/sock-shop
 ```
 
-To deploy sock shop and create namespace:
+Create sock shop namespace:
 ```bash
 kubectl create ns sock-shop
 ```
+
+Install Litmus infrastructure components:
+```bash
+kubectl apply -f https://litmuschaos.github.io/litmus/litmus-operator-v3.0.0.yaml
+```
+```bash
+kubectl apply -f https://litmuschaos.github.io/litmus/litmus-admin-rbac.yaml
+```
+
+Download and install Litmus experiments ([chaos experiments](https://github.com/litmuschaos/chaos-charts/tree/master)):
+```bash
+tar -zxvf <(curl -sL https://github.com/litmuschaos/chaos-charts/archive/3.0.0.tar.gz)
+```
+```bash
+find chaos-charts-3.0.0 -name experiments.yaml | grep kubernetes | xargs kubectl apply -n sock-shop -f
+```
+
+Add monitoring:
+```bash
+kubectl apply -f deploy/monitoring/01-monitoring-ns.yaml
+kubectl apply -f deploy/monitoring/02-prometheus-rbac.yaml
+kubectl apply -f deploy/monitoring/03-prometheus-configmap.yaml
+kubectl apply -f deploy/monitoring/04-prometheus-alert-rules.yaml
+kubectl apply -f deploy/monitoring/05-prometheus-deployment.yaml
+kubectl apply -f deploy/monitoring/06-prometheus-svc.yaml
+kubectl apply -f deploy/monitoring/07-grafana-deployment.yaml
+kubectl apply -f deploy/monitoring/08-grafana-svc.yaml
+```
+
+Deploy sock shop:
 ```bash
 kubectl apply -f deploy/sock-shop/
 ```
-
-For monitoring purposes we are using Istio: https://github.com/istio/istio/releases/tag/1.21.1. To deploy Istio / tools for monitoring, Istio should be started before demo app. If not, the demo app should be redeployed.
-
 ```bash
-istioctl manifest apply --set profile=demo
-```
-```bash
-kubectl label namespace sock-shop istio-injection=enabled
+watch -n 5 kubectl get pods -n sock-shop
 ```
 
-To deploy Prometeus:
+Get the Prometheus cluster IP address:
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.21/samples/addons/prometheus.yaml
+kubectl get svc -n monitoring
 ```
 
-To deploy Grafana:
+Set up Grafana:
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.21/samples/addons/grafana.yaml
+kubectl port-forward service/grafana 3000:3000 --namespace=monitoring
 ```
+Log into Grafana (default credentials: username: admin, password: admin) and create a new datasource, inputing Prometheus address.
 
-To deploy Kiali:
-```bash
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.21/samples/addons/kiali.yaml
-```
-
-To open a monitoring apps:
-```bash
-istioctl dashboard <app_name>
-```
-
+Create new dashboard. Dashboard -> New -> Import -> Copy [this dashboard file](https://raw.githubusercontent.com/litmuschaos/litmus/master/demo/sample-applications/sock-shop/deploy/monitoring/10-grafana-dashboard.json)
 
 ## 7. How to reproduce - step by step
 
