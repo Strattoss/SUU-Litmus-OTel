@@ -105,7 +105,16 @@ Node group configuration:
 
 ## 6. Installation method
 
-Our demo source code:
+In order to install the application on the Kubernetes cluster, one must first establish a connection with the AWS EKS cluster.
+
+Verify the connection setup:
+```bash
+aws eks --region us-east-1 update-kubeconfig --name <cluster_name>
+```
+
+## 7. How to reproduce - step by step. Infrastructure as Code approach
+
+The demo source code:
 ```bash
 git clone https://github.com/litmuschaos/litmus.git
 ```
@@ -124,14 +133,6 @@ kubectl apply -f https://litmuschaos.github.io/litmus/litmus-operator-v3.0.0.yam
 ```
 ```bash
 kubectl apply -f https://litmuschaos.github.io/litmus/litmus-admin-rbac.yaml
-```
-
-Download and install Litmus experiments ([chaos experiments](https://github.com/litmuschaos/chaos-charts/tree/master)):
-```bash
-tar -zxvf <(curl -sL https://github.com/litmuschaos/chaos-charts/archive/3.0.0.tar.gz)
-```
-```bash
-find chaos-charts-3.0.0 -name experiments.yaml | grep kubernetes | xargs kubectl apply -n sock-shop -f
 ```
 
 Add monitoring:
@@ -165,19 +166,32 @@ kubectl port-forward service/grafana 3000:3000 --namespace=monitoring
 ```
 Log into Grafana (default credentials: username: admin, password: admin) and create a new datasource, inputing Prometheus address.
 
-Create new dashboard. Dashboard -> New -> Import -> Copy [this dashboard file](https://raw.githubusercontent.com/litmuschaos/litmus/master/demo/sample-applications/sock-shop/deploy/monitoring/10-grafana-dashboard.json)
-
-## 7. How to reproduce - step by step
-
-### 1. Infrastructure as Code approach
+Create new dashboard. `Dashboard` --> `New` --> `Import` --> `Copy` [this dashboard file](https://raw.githubusercontent.com/litmuschaos/litmus/master/demo/sample-applications/sock-shop/deploy/monitoring/10-grafana-dashboard.json)
 
 ## 8. Demo deployment steps:
 
 ### 1. Configuration set-up
 
+The neccessary environment setup steps has been descibed in sections [Environment configuration description](#5-environment-configuration-description) and [Installation method](#6-installation-method).
+
+Cluster components setup has been described in section [How to reproduce - step-by-step](#7-how-to-reproduce---step-by-step-infrastructure-as-code-approach).
+
 ### 2. Data preparation
 
+Download and install Litmus experiments ([chaos experiments](https://github.com/litmuschaos/chaos-charts/tree/master)):
+```bash
+tar -zxvf <(curl -sL https://github.com/litmuschaos/chaos-charts/archive/3.0.0.tar.gz)
+```
+```bash
+find chaos-charts-3.0.0 -name experiments.yaml | grep kubernetes | xargs kubectl apply -n sock-shop -f
+```
+
 ### 3. Execution procedure
+
+Choose an experiment from the [experiments](./experiments/) directory and run it:
+```bash
+kubectl apply -f experiments/<chosen-experiment>.yaml
+```
 
 ### 4. Results presentation
 
