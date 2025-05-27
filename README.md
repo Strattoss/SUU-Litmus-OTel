@@ -187,6 +187,16 @@ Choose an experiment from the [experiments](./experiments/) directory and run it
 kubectl apply -f experiments/<chosen-experiment>.yaml
 ```
 
+Verify the experiment 
+```bash
+ kubectl describe chaosengine catalogue-cpu-hog -n litmus
+```
+
+In case of an error, check the logs:
+```bash
+kubectl logs <pod-name> -n litmus
+```
+
 ### 4. Results presentation
 
 ## 9. Using AI in the project
