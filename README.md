@@ -114,17 +114,11 @@ aws eks --region us-east-1 update-kubeconfig --name <cluster_name>
 
 ## 7. How to reproduce - step by step. Infrastructure as Code approach
 
-The demo source code:
-```bash
-git clone https://github.com/litmuschaos/litmus.git
-```
-```bash
-cd litmus/demo/sample-applications/sock-shop
-```
+All the necessary source code is in the `deploy/` directory in this repository.
 
 Create sock shop namespace:
 ```bash
-kubectl create ns sock-shop
+kubectl apply -f deploy/sock-shop/01-namespace.yaml
 ```
 
 Install Litmus infrastructure components:
@@ -166,7 +160,7 @@ kubectl port-forward service/grafana 3000:3000 --namespace=monitoring
 ```
 Log into Grafana (default credentials: username: admin, password: admin) and create a new datasource, inputing Prometheus address.
 
-Create new dashboard. `Dashboard` --> `New` --> `Import` --> `Copy` [this dashboard file](https://raw.githubusercontent.com/litmuschaos/litmus/master/demo/sample-applications/sock-shop/deploy/monitoring/10-grafana-dashboard.json)
+Create new dashboard. `Dashboard` --> `New` --> `Import` --> `Copy` [this for sockshop metrics](https://raw.githubusercontent.com/litmuschaos/litmus/master/demo/sample-applications/sock-shop/deploy/monitoring/10-grafana-dashboard.json) and [this for litmus chaos experiment metrics](https://raw.githubusercontent.com/litmuschaos/litmus/master/monitoring/grafana-dashboards/sock-shop/Sock-Shop-Performance-Under-Chaos.json).
 
 ## 8. Demo deployment steps:
 
