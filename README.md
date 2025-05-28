@@ -13,10 +13,11 @@ This document shows how to use Litmus Chaos and OpenTelemetry to test how well a
 | Layer | Technology | Purpose |
 | --- | --- | --- |
 | Chaos | Litmus Chaos | Inject pod‑level & network faults via CRDs (Custom Resource Definition) |
-| Observability | Prometheus Grafana | Collect traces, scrape metrics, display dashboards |
-| Platform | Kubernetes, Helm | Cluster, package manager |
+| Metrics backend | Prometheus | Collect traces, scrape metrics |
+| Metrics visualization | Grafana | Display dashboards |
+| Platform | Kubernetes | Cluster |
 | Application | Sock Shop | Workload under test |
-| Infrastructure as Code | Helm charts, Kustomize | Declarative deployment |
+| Infrastructure as Code | YAML files | Declarative deployment |
 
 LitmusChaos is a Cloud-Native Chaos Engineering Framework with cross-cloud support. It is a CNCF Incubating project with adoption across several organizations. Its mission is to help Kubernetes SREs and Developers to find weaknesses in both Non-Kubernetes as well as platforms and applications running on Kubernetes by providing a complete Chaos Engineering framework and associated Chaos Experiments.
 
@@ -78,11 +79,13 @@ SockShop architecture schema:
 
 ![Socket shop architecture](./images/socket-shop-architecture.png)
 
-Each SockShop component will have a sidecar provided by [Istio](https://istio.io/), which will be scrapped for the ongoing communication statistics by the metrics collecting backend - [Prometheus](https://prometheus.io/).
+Sock shop exporter will be scrapped for the ongoing communication statistics by the metrics collecting backend - [Prometheus](https://prometheus.io/).
 
-In order to visualize the collected metrics, we use Grafana and set it up to work correctly with [Prometheus](https://grafana.com/). Additionally, we use [Kiali](https://kiali.io/) in order to track how the SockShop services communicate and take a peek at the error that we expect to observe when introducing the faults with [Litmus](https://litmuschaos.io/).
+In order to visualize the collected metrics and to observe changes that we expect when introducing the faults with [Litmus](https://litmuschaos.io/), we use [Grafana](https://grafana.com/) and set it up to work correctly with [Prometheus](https://prometheus.io/).
 
-In the cluster there are two defined namespaces: sock-shop and istio-system.
+In the cluster there are two defined namespaces: `sock-shop` and `litmus`.
+
+TODO: insert the whole cluster architecture diagram (with namespaces, litmus pods, experiments, engines, prometheus and grafana)
 
 
 ## 5. Environment configuration description
@@ -102,63 +105,97 @@ Node group configuration:
 
 ## 6. Installation method
 
-Our demo source:
-```
-git clone https://github.com/litmuschaos/litmus.git
-```
+In order to install the application on the Kubernetes cluster, one must first establish a connection with the AWS EKS cluster.
+
+Verify the connection setup:
 ```bash
-cd litmus/demo/sample-applications/sock-shop
+aws eks --region us-east-1 update-kubeconfig --name <cluster_name>
 ```
 
-To deploy sock shop and create namespace:
+## 7. How to reproduce - step by step. Infrastructure as Code approach
+
+All the necessary source code is in the `deploy/` directory in this repository.
+
+Create sock shop namespace:
 ```bash
-kubectl create ns sock-shop
+kubectl apply -f deploy/sock-shop/01-namespace.yaml
 ```
+
+Install Litmus infrastructure components:
+```bash
+kubectl apply -f https://litmuschaos.github.io/litmus/litmus-operator-v3.0.0.yaml
+```
+```bash
+kubectl apply -f https://litmuschaos.github.io/litmus/litmus-admin-rbac.yaml
+```
+
+Add monitoring:
+```bash
+kubectl apply -f deploy/monitoring/01-monitoring-ns.yaml
+kubectl apply -f deploy/monitoring/02-prometheus-rbac.yaml
+kubectl apply -f deploy/monitoring/03-prometheus-configmap.yaml
+kubectl apply -f deploy/monitoring/04-prometheus-alert-rules.yaml
+kubectl apply -f deploy/monitoring/05-prometheus-deployment.yaml
+kubectl apply -f deploy/monitoring/06-prometheus-svc.yaml
+kubectl apply -f deploy/monitoring/07-grafana-deployment.yaml
+kubectl apply -f deploy/monitoring/08-grafana-svc.yaml
+```
+
+Deploy sock shop:
 ```bash
 kubectl apply -f deploy/sock-shop/
 ```
-
-For monitoring purposes we are using Istio: https://github.com/istio/istio/releases/tag/1.21.1. To deploy Istio / tools for monitoring, Istio should be started before demo app. If not, the demo app should be redeployed.
-
 ```bash
-istioctl manifest apply --set profile=demo
-```
-```bash
-kubectl label namespace sock-shop istio-injection=enabled
+watch -n 5 kubectl get pods -n sock-shop
 ```
 
-To deploy Prometeus:
+Get the Prometheus cluster IP address:
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.21/samples/addons/prometheus.yaml
+kubectl get svc -n monitoring
 ```
 
-To deploy Grafana:
+Set up Grafana:
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.21/samples/addons/grafana.yaml
+kubectl port-forward service/grafana 3000:3000 --namespace=monitoring
 ```
+Log into Grafana (default credentials: username: admin, password: admin) and create a new datasource, inputing Prometheus address.
 
-To deploy Kiali:
-```bash
-kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.21/samples/addons/kiali.yaml
-```
-
-To open a monitoring apps:
-```bash
-istioctl dashboard <app_name>
-```
-
-
-## 7. How to reproduce - step by step
-
-### 1. Infrastructure as Code approach
+Create new dashboard. `Dashboard` --> `New` --> `Import` --> `Copy` [this for sockshop metrics](https://raw.githubusercontent.com/litmuschaos/litmus/master/demo/sample-applications/sock-shop/deploy/monitoring/10-grafana-dashboard.json) and [this for litmus chaos experiment metrics](https://raw.githubusercontent.com/litmuschaos/litmus/master/monitoring/grafana-dashboards/sock-shop/Sock-Shop-Performance-Under-Chaos.json).
 
 ## 8. Demo deployment steps:
 
 ### 1. Configuration set-up
 
+The neccessary environment setup steps has been descibed in sections [Environment configuration description](#5-environment-configuration-description) and [Installation method](#6-installation-method).
+
+Cluster components setup has been described in section [How to reproduce - step-by-step](#7-how-to-reproduce---step-by-step-infrastructure-as-code-approach).
+
 ### 2. Data preparation
 
+Download and install Litmus experiments ([chaos experiments](https://github.com/litmuschaos/chaos-charts/tree/master)):
+```bash
+tar -zxvf <(curl -sL https://github.com/litmuschaos/chaos-charts/archive/3.0.0.tar.gz)
+```
+```bash
+find chaos-charts-3.0.0 -name experiments.yaml | grep kubernetes | xargs kubectl apply -n sock-shop -f
+```
+
 ### 3. Execution procedure
+
+Choose an experiment from the [experiments](./experiments/) directory and run it:
+```bash
+kubectl apply -f experiments/<chosen-experiment>.yaml
+```
+
+Verify the experiment 
+```bash
+ kubectl describe chaosengine catalogue-cpu-hog -n litmus
+```
+
+In case of an error, check the logs:
+```bash
+kubectl logs <pod-name> -n litmus
+```
 
 ### 4. Results presentation
 
