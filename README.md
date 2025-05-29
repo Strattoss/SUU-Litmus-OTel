@@ -177,7 +177,7 @@ Download and install Litmus experiments ([chaos experiments](https://github.com/
 tar -zxvf <(curl -sL https://github.com/litmuschaos/chaos-charts/archive/3.0.0.tar.gz)
 ```
 ```bash
-find chaos-charts-3.0.0 -name experiments.yaml | grep kubernetes | xargs kubectl apply -n sock-shop -f
+find chaos-charts-3.0.0 -name experiments.yaml | grep kubernetes | xargs kubectl apply -n litmus -f
 ```
 
 ### 3. Execution procedure
