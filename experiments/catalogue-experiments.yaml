@@ -1,0 +1,83 @@
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: catalogue-experiments
+  namespace: litmus
+spec:
+  annotationCheck: 'false'
+  engineState: 'active'
+  monitoring: true
+  auxiliaryAppInfo: ''
+  appinfo:
+    appns: 'sock-shop'
+    applabel: 'name=catalogue'
+    appkind: 'deployment'
+  chaosServiceAccount: litmus-admin
+  experiments:
+    - name: pod-cpu-hog
+      spec:
+        components:
+          env:
+            - name: APP_NAMESPACE
+              value: 'sock-shop'
+
+
+            - name: APP_LABEL
+              value: 'name=catalogue'
+
+
+            - name: APP_KIND
+              value: 'deployment'
+             
+            - name: TARGET_CONTAINER
+              value: 'catalogue'
+            - name: CPU_CORES
+              value: '1'
+
+
+            - name: TOTAL_CHAOS_DURATION
+              value: '240'
+
+    - name: pod-delete
+      spec:
+        components:
+          env:
+          - name: APP_NAMESPACE
+            value: sock-shop
+          - name: APP_LABEL
+            value: name=catalogue
+          - name: APP_KIND
+            value: deployment
+          - name: TOTAL_CHAOS_DURATION
+            value: "60"
+          - name: CHAOS_INTERVAL
+            value: "30" 
+          - name: PODS_AFFECTED_PERC   
+            value: "100"
+          - name: FORCE 
+            value: "true"
+
+    - name: pod-network-latency
+      spec:
+        components:
+          env:
+            - name: APP_NAMESPACE
+              value: 'sock-shop'
+            - name: APP_LABEL
+              value: 'name=catalogue'
+            - name: APP_KIND
+              value: 'deployment'
+            - name: TARGET_CONTAINER
+              value: 'catalogue'
+            - name: NETWORK_INTERFACE
+              value: 'eth0'
+            - name: NETWORK_LATENCY
+              value: '200'
+            - name: TOTAL_CHAOS_DURATION
+              value: '60'
+            - name: PODS_AFFECTED_PERC
+              value: "100"  
+            - name: CONTAINER_RUNTIME
+              value: 'containerd'
+            - name: SOCKET_PATH
+              value: '/run/containerd/containerd.sock'

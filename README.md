@@ -129,8 +129,9 @@ kubectl apply -f https://litmuschaos.github.io/litmus/litmus-operator-v3.0.0.yam
 kubectl apply -f https://litmuschaos.github.io/litmus/litmus-admin-rbac.yaml
 ```
 
-Add monitoring:
+Add monitoring (Prometheus + Grafana + Chaos Exporter):
 ```bash
+kubectl apply -f deploy/litmus-metrics/chaos-exporter.yaml
 kubectl apply -f deploy/monitoring/01-monitoring-ns.yaml
 kubectl apply -f deploy/monitoring/02-prometheus-rbac.yaml
 kubectl apply -f deploy/monitoring/03-prometheus-configmap.yaml
@@ -186,10 +187,31 @@ Choose an experiment from the [experiments](./experiments/) directory and run it
 ```bash
 kubectl apply -f experiments/<chosen-experiment>.yaml
 ```
+**note**: `catalogue-experiments.yaml` contains three experiments: `pod-cpu-hog` ,`pod-delete` and `network-latency`.
+
+
+Below are descriptions and visualizations of the three experiments included in `catalogue-experiments.yaml`:
+
+### pod-delete
+Deletes pods of an application to test self-healing and availability mechanisms.  
+[Documentation](https://litmuschaos.github.io/litmus/experiments/categories/pods/pod-delete/)  
+![pod-delete](./images/pod-delete-experiment.png)
+
+### pod-network-latency
+Injects network latency into a container to simulate poor network conditions and test application behavior.  
+[Documentation](https://litmuschaos.github.io/litmus/experiments/categories/pods/pod-network-latency/)  
+![pod-network-latency](./images/pod-network-latency-experiment.png)
+
+### pod-cpu-hog 
+Simulates high CPU usage on a specific container to test how the application handles resource stress.  
+[Documentation](https://litmuschaos.github.io/litmus/experiments/categories/pods/pod-cpu-hog/)  
+![pod-cpu-hog](./images/stress-the-cpu-experiment.png)
+
+
 
 Verify the experiment 
 ```bash
- kubectl describe chaosengine catalogue-cpu-hog -n litmus
+ kubectl describe chaosengine catalogue-experiments -n litmus
 ```
 
 In case of an error, check the logs:
@@ -197,7 +219,23 @@ In case of an error, check the logs:
 kubectl logs <pod-name> -n litmus
 ```
 
+
 ### 4. Results presentation
+
+![grafana-experiments](./images/grafana-experiments.png)
+
+The Litmus Chaos experiments were successfully executed and monitored using Grafana dashboards. Three different types of faults were injected: `pod-cpu-hog`, `pod-delete`, and `pod-network-latency`. All chaos experiments completed successfully without failures.
+
+**Chaos Experiments Injection**:
+  Each of the three experiments was triggered and shown in the "Chaos Experiments" panel with one injection per fault type.
+
+![grafana-experiments-pods-affected](./images/grafana-experiments-pods-affected.png)
+
+**System Behavior Metrics**:
+
+* **Catalogue QPS** temporarily dropped during the `pod-delete` fault injection.
+* **Catalogue Latency** briefly spiked during the `pod-network-latency` injection, with the 99th percentile reaching approximately 2 seconds.
+
 
 ## 9. Using AI in the project
 
