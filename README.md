@@ -230,11 +230,14 @@ The Litmus Chaos experiments were successfully executed and monitored using Graf
   Each of the three experiments was triggered and shown in the "Chaos Experiments" panel with one injection per fault type.
 
 ![grafana-experiments-pods-affected](./images/grafana-experiments-pods-affected.png)
-
+![catalogue-latency-p95-less-500ms](./images/catalogue-latency-p95-less-500ms.png)
 **System Behavior Metrics**:
 
 * **Catalogue QPS** temporarily dropped during the `pod-delete` fault injection.
 * **Catalogue Latency** briefly spiked during the `pod-network-latency` injection, with the 99th percentile reaching approximately 2 seconds.
+
+* **Catalogue p95 Latency** temporarily increased during the `pod-network-latency` injection, peaking at **495 ms around 15:34:30**, but remained **within the hypothesis threshold (p95 < 500 ms)**.
+
 
 
 ## 9. Using AI in the project
