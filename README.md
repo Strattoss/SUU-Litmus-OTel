@@ -83,9 +83,32 @@ Sock shop exporter will be scrapped for the ongoing communication statistics by 
 
 In order to visualize the collected metrics and to observe changes that we expect when introducing the faults with [Litmus](https://litmuschaos.io/), we use [Grafana](https://grafana.com/) and set it up to work correctly with [Prometheus](https://prometheus.io/).
 
-In the cluster there are two defined namespaces: `sock-shop` and `litmus`.
+In the cluster there are three defined namespaces: `monitoring`,  `sock-shop` and `litmus`.
 
-TODO: insert the whole cluster architecture diagram (with namespaces, litmus pods, experiments, engines, prometheus and grafana)
+<!-- TODO: insert the whole cluster architecture diagram (with namespaces, litmus pods, experiments, engines, prometheus and grafana) -->
+
+![Cluster architecture](./images/Litmus-architecture.svg)
+
+1. **Application --> Prometheus**
+   The Sock Shop application exposes metrics, which are scraped by Prometheus in the `monitoring` namespace.
+
+2. **Prometheus --> Grafana**
+   Grafana retrieves time series data from Prometheus to visualize system behavior and experiment outcomes.
+
+3. **Litmus Operator --> Chaos Runner**
+   The Litmus Operator manages and triggers the Chaos Runner based on defined `ChaosEngine` resources.
+
+4. **Chaos Runner --> Application**
+   The Chaos Runner injects faults into the application, such as deleting pods, to test its resilience.
+
+5. **Chaos Runner --> ChaosResult**
+   After executing an experiment, the Chaos Runner writes the outcome (e.g., verdict, duration) into a `ChaosResult` custom resource.
+
+6. **Chaos Exporter --> ChaosResult**
+   The Chaos Exporter reads experiment results from `ChaosResult` using the Kubernetes API.
+
+7. **Chaos Exporter --> Prometheus**
+   The Chaos Exporter exposes those results as Prometheus metrics, which are scraped for analysis and visualization.
 
 
 ## 5. Environment configuration description
