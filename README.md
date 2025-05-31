@@ -254,6 +254,7 @@ The Litmus Chaos experiments were successfully executed and monitored using Graf
 
 ![grafana-experiments-pods-affected](./images/grafana-experiments-pods-affected.png)
 ![catalogue-latency-p95-less-500ms](./images/catalogue-latency-p95-less-500ms.png)
+
 **System Behavior Metrics**:
 
 * **Catalogue QPS** temporarily dropped during the `pod-delete` fault injection.
