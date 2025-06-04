@@ -154,14 +154,14 @@ kubectl apply -f https://litmuschaos.github.io/litmus/litmus-admin-rbac.yaml
 
 Add monitoring (Prometheus + Grafana + Chaos Exporter):
 ```bash
-kubectl apply -f deploy/litmus-metrics/chaos-exporter.yaml
-kubectl apply -f deploy/monitoring/01-monitoring-ns.yaml
-kubectl apply -f deploy/monitoring/02-prometheus-rbac.yaml
-kubectl apply -f deploy/monitoring/03-prometheus-configmap.yaml
-kubectl apply -f deploy/monitoring/04-prometheus-alert-rules.yaml
-kubectl apply -f deploy/monitoring/05-prometheus-deployment.yaml
-kubectl apply -f deploy/monitoring/06-prometheus-svc.yaml
-kubectl apply -f deploy/monitoring/07-grafana-deployment.yaml
+kubectl apply -f deploy/litmus-metrics/chaos-exporter.yaml;
+kubectl apply -f deploy/monitoring/01-monitoring-ns.yaml;
+kubectl apply -f deploy/monitoring/02-prometheus-rbac.yaml;
+kubectl apply -f deploy/monitoring/03-prometheus-configmap.yaml;
+kubectl apply -f deploy/monitoring/04-prometheus-alert-rules.yaml;
+kubectl apply -f deploy/monitoring/05-prometheus-deployment.yaml;
+kubectl apply -f deploy/monitoring/06-prometheus-svc.yaml;
+kubectl apply -f deploy/monitoring/07-grafana-deployment.yaml;
 kubectl apply -f deploy/monitoring/08-grafana-svc.yaml
 ```
 
@@ -182,9 +182,9 @@ Set up Grafana:
 ```bash
 kubectl port-forward service/grafana 3000:3000 --namespace=monitoring
 ```
-Log into Grafana (default credentials: username: admin, password: admin) and create a new datasource, inputing Prometheus address.
+Log into Grafana (default credentials: username: admin, password: admin) and create a new datasource, inputing Prometheus address and naming it "DS_PROMETHEUS".
 
-Create new dashboard. `Dashboard` --> `New` --> `Import` --> `Copy` [this for sockshop metrics](https://raw.githubusercontent.com/litmuschaos/litmus/master/demo/sample-applications/sock-shop/deploy/monitoring/10-grafana-dashboard.json) and [this for litmus chaos experiment metrics](https://raw.githubusercontent.com/litmuschaos/litmus/master/monitoring/grafana-dashboards/sock-shop/Sock-Shop-Performance-Under-Chaos.json).
+Create new dashboard. `Dashboard` --> `New` --> `Import` --> `Copy` [this dashboard](./deploy/monitoring/12-grafana-dashboard_complete.json).
 
 ## 8. Demo deployment steps:
 
@@ -210,10 +210,8 @@ Choose an experiment from the [experiments](./experiments/) directory and run it
 ```bash
 kubectl apply -f experiments/<chosen-experiment>.yaml
 ```
-**note**: `catalogue-experiments.yaml` contains three experiments: `pod-cpu-hog` ,`pod-delete` and `network-latency`.
 
-
-Below are descriptions and visualizations of the three experiments included in `catalogue-experiments.yaml`:
+Below are descriptions and visualizations of the three prepared experiments:
 
 ### pod-delete
 Deletes pods of an application to test self-healing and availability mechanisms.  
@@ -245,15 +243,243 @@ kubectl logs <pod-name> -n litmus
 
 ### 4. Results presentation
 
-![grafana-experiments](./images/grafana-experiments.png)
-
 The Litmus Chaos experiments were successfully executed and monitored using Grafana dashboards. Three different types of faults were injected: `pod-cpu-hog`, `pod-delete`, and `pod-network-latency`. All chaos experiments completed successfully without failures.
 
 **Chaos Experiments Injection**:
   Each of the three experiments was triggered and shown in the "Chaos Experiments" panel with one injection per fault type.
 
-![grafana-experiments-pods-affected](./images/grafana-experiments-pods-affected.png)
-![catalogue-latency-p95-less-500ms](./images/catalogue-latency-p95-less-500ms.png)
+![grafana-experiments](./images/grafana-experiments.png)
+
+<!-- ![grafana-experiments-pods-affected](./images/grafana-experiments-pods-affected.png)
+![catalogue-latency-p95-less-500ms](./images/catalogue-latency-p95-less-500ms.png) -->
+
+#### Carts experiment (pod-network-latency) description
+
+![grafana-metrics-cart](./images/grafana-metrics-cart.png)
+
+```yaml
+❯ kubectl describe chaosengine carts-experiments -n litmus
+Name:         carts-experiments
+Namespace:    litmus
+Labels:       <none>
+Annotations:  <none>
+API Version:  litmuschaos.io/v1alpha1
+Kind:         ChaosEngine
+Metadata:
+  Creation Timestamp:  2025-06-02T19:11:40Z
+  Finalizers:
+    chaosengine.litmuschaos.io/finalizer
+  Generation:        65
+  Resource Version:  35179
+  UID:               6c5128b2-b993-477f-876a-699cfcb2518b
+Spec:
+  Appinfo:
+    Appkind:              deployment
+    Applabel:             name=carts
+    Appns:                sock-shop
+  Chaos Service Account:  litmus-admin
+  Components:
+    Runner:
+      Resources:
+  Engine State:  stop
+  Experiments:
+    Name:  pod-network-latency
+    Spec:
+      Components:
+        Env:
+          Name:   APP_NAMESPACE
+          Value:  sock-shop
+          Name:   APP_LABEL
+          Value:  name=carts
+          Name:   APP_KIND
+          Value:  deployment
+          Name:   TARGET_CONTAINER
+          Value:  carts
+          Name:   NETWORK_INTERFACE
+          Value:  eth0
+          Name:   NETWORK_LATENCY
+          Value:  200
+          Name:   TOTAL_CHAOS_DURATION
+          Value:  240
+          Name:   PODS_AFFECTED_PERC
+          Value:  100
+          Name:   CONTAINER_RUNTIME
+          Value:  containerd
+          Name:   SOCKET_PATH
+          Value:  /run/containerd/containerd.sock
+        Resources:
+        Status Check Timeouts:
+Status:
+  Engine Status:  completed
+  Experiments:
+    Experiment Pod:    pod-network-latency-e6mctx-5rfvv
+    Last Update Time:  2025-06-02T19:49:00Z
+    Name:              pod-network-latency
+    Runner:            carts-experiments-runner
+    Status:            Completed
+    Verdict:           Pass
+Events:
+  Type    Reason                     Age                  From                              Message
+  ----    ------                     ----                 ----                              -------
+  Normal  ChaosEngineInitialized     5m33s (x2 over 38m)  chaos-operator                    Identifying app under test & launching carts-experiments-runner
+  Normal  ExperimentDependencyCheck  5m29s (x2 over 38m)  carts-experiments-runner          Experiment resources validated for Chaos Experiment: pod-network-latency
+  Normal  ExperimentJobCreate        5m29s (x2 over 38m)  carts-experiments-runner          Experiment Job pod-network-latency-e6mctx for Chaos Experiment: pod-network-latency
+  Normal  PreChaosCheck              5m22s (x2 over 38m)  pod-network-latency-e6mctx-5rfvv  Skipped the default checks
+  Normal  ChaosInject                5m21s (x2 over 38m)  pod-network-latency-helper-b89xx  Injected pod-network-latency chaos on application pods
+  Normal  PostChaosCheck             77s (x2 over 37m)    pod-network-latency-e6mctx-5rfvv  Skipped the default checks
+  Normal  Summary                    73s (x2 over 37m)    pod-network-latency-e6mctx-5rfvv  pod-network-latency experiment has been Passed
+  Normal  ExperimentJobCleanUp       67s (x2 over 36m)    carts-experiments-runner          Experiment Job pod-network-latency-e6mctx will be retained
+  Normal  ChaosEngineCompleted       66s (x2 over 36m)    chaos-operator                    ChaosEngine completed, will delete or retain the resources according to jobCleanUpPolicy
+
+```
+
+#### Catalogue experiment (pod-cpu-hog) description
+
+![grafana-metrics-catalogue](./images/grafana-metrics-catalogue.png)
+
+```yaml
+❯ kubectl describe chaosengine catalogue-experiments -n litmus
+Name:         catalogue-experiments
+Namespace:    litmus
+Labels:       <none>
+Annotations:  <none>
+API Version:  litmuschaos.io/v1alpha1
+Kind:         ChaosEngine
+Metadata:
+  Creation Timestamp:  2025-06-02T19:09:22Z
+  Finalizers:
+    chaosengine.litmuschaos.io/finalizer
+  Generation:        95
+  Resource Version:  36438
+  UID:               4554d61e-9ef3-4b21-a538-c634e0c829dd
+Spec:
+  Appinfo:
+    Appkind:              deployment
+    Applabel:             name=catalogue
+    Appns:                sock-shop
+  Chaos Service Account:  litmus-admin
+  Components:
+    Runner:
+      Resources:
+  Engine State:  stop
+  Experiments:
+    Name:  pod-cpu-hog
+    Spec:
+      Components:
+        Env:
+          Name:   APP_NAMESPACE
+          Value:  sock-shop
+          Name:   APP_LABEL
+          Value:  name=catalogue
+          Name:   APP_KIND
+          Value:  deployment
+          Name:   PODS_AFFECTED_PERC
+          Value:  100
+          Name:   TARGET_CONTAINER
+          Value:  catalogue
+          Name:   CPU_CORES
+          Value:  2
+          Name:   TOTAL_CHAOS_DURATION
+          Value:  240
+        Resources:
+        Status Check Timeouts:
+Status:
+  Engine Status:  completed
+  Experiments:
+    Experiment Pod:    pod-cpu-hog-znscki-g4wj7
+    Last Update Time:  2025-06-02T19:53:53Z
+    Name:              pod-cpu-hog
+    Runner:            catalogue-experiments-runner
+    Status:            Completed
+    Verdict:           Pass
+Events:
+  Type    Reason                     Age                  From                          Message
+  ----    ------                     ----                 ----                          -------
+  Normal  ChaosEngineInitialized     5m21s (x2 over 45m)  chaos-operator                Identifying app under test & launching catalogue-experiments-runner
+  Normal  ExperimentDependencyCheck  5m20s (x2 over 45m)  catalogue-experiments-runner  Experiment resources validated for Chaos Experiment: pod-cpu-hog
+  Normal  ExperimentJobCreate        5m20s (x2 over 45m)  catalogue-experiments-runner  Experiment Job pod-cpu-hog-znscki for Chaos Experiment: pod-cpu-hog
+  Normal  PreChaosCheck              5m13s (x2 over 45m)  pod-cpu-hog-znscki-g4wj7      Skipped the default checks
+  Normal  ChaosInject                5m11s (x2 over 45m)  pod-cpu-hog-helper-4t2t2      Injecting pod-cpu-hog chaos on application pod
+  Normal  PostChaosCheck             67s (x2 over 41m)    pod-cpu-hog-znscki-g4wj7      Skipped the default checks
+  Normal  Summary                    63s (x2 over 41m)    pod-cpu-hog-znscki-g4wj7      pod-cpu-hog experiment has been Passed
+  Normal  ExperimentJobCleanUp       57s (x2 over 41m)    catalogue-experiments-runner  Experiment Job pod-cpu-hog-znscki will be retained
+  Normal  ChaosEngineCompleted       57s (x2 over 41m)    chaos-operator                ChaosEngine completed, will delete or retain the resources according to jobCleanUpPolicy
+
+```
+
+#### Orders experiment (pod-delete) description
+
+![grafana-metrics-orders](./images/grafana-metrics-orders.png)
+
+```yaml
+❯ kubectl describe chaosengine orders-experiments -n litmus
+Name:         orders-experiments
+Namespace:    litmus
+Labels:       <none>
+Annotations:  <none>
+API Version:  litmuschaos.io/v1alpha1
+Kind:         ChaosEngine
+Metadata:
+  Creation Timestamp:  2025-06-02T19:13:06Z
+  Finalizers:
+    chaosengine.litmuschaos.io/finalizer
+  Generation:        77
+  Resource Version:  37572
+  UID:               db4e5a90-1485-4760-998f-4eddeecd588d
+Spec:
+  Appinfo:
+    Appkind:              deployment
+    Applabel:             name=orders
+    Appns:                sock-shop
+  Chaos Service Account:  litmus-admin
+  Components:
+    Runner:
+      Resources:
+  Engine State:  stop
+  Experiments:
+    Name:  pod-delete
+    Spec:
+      Components:
+        Env:
+          Name:   APP_NAMESPACE
+          Value:  sock-shop
+          Name:   APP_LABEL
+          Value:  name=orders
+          Name:   APP_KIND
+          Value:  deployment
+          Name:   TOTAL_CHAOS_DURATION
+          Value:  60
+          Name:   CHAOS_INTERVAL
+          Value:  30
+          Name:   PODS_AFFECTED_PERC
+          Value:  100
+          Name:   FORCE
+          Value:  true
+        Resources:
+        Status Check Timeouts:
+Status:
+  Engine Status:  completed
+  Experiments:
+    Experiment Pod:    pod-delete-ghqkgj-nm48p
+    Last Update Time:  2025-06-02T19:58:11Z
+    Name:              pod-delete
+    Runner:            orders-experiments-runner
+    Status:            Completed
+    Verdict:           Pass
+Events:
+  Type    Reason                     Age                  From                       Message
+  ----    ------                     ----                 ----                       -------
+  Normal  ChaosEngineInitialized     9m19s (x2 over 50m)  chaos-operator             Identifying app under test & launching orders-experiments-runner
+  Normal  ExperimentDependencyCheck  9m17s (x2 over 50m)  orders-experiments-runner  Experiment resources validated for Chaos Experiment: pod-delete
+  Normal  ExperimentJobCreate        9m17s (x2 over 50m)  orders-experiments-runner  Experiment Job pod-delete-ghqkgj for Chaos Experiment: pod-delete
+  Normal  ChaosInject                9m10s (x2 over 50m)  pod-delete-ghqkgj-nm48p    Injecting pod-delete chaos on application pod
+  Normal  PreChaosCheck              9m10s (x2 over 50m)  pod-delete-ghqkgj-nm48p    Skipped the default checks
+  Normal  PostChaosCheck             6m1s (x2 over 47m)   pod-delete-ghqkgj-nm48p    Skipped the default checks
+  Normal  Summary                    5m57s (x2 over 47m)  pod-delete-ghqkgj-nm48p    pod-delete experiment has been Passed
+  Normal  ExperimentJobCleanUp       5m50s (x2 over 47m)  orders-experiments-runner  Experiment Job pod-delete-ghqkgj will be retained
+  Normal  ChaosEngineCompleted       5m49s (x2 over 47m)  chaos-operator             ChaosEngine completed, will delete or retain the resources according to jobCleanUpPolicy
+
+```
 
 **System Behavior Metrics**:
 
