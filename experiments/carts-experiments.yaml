@@ -1,7 +1,7 @@
 apiVersion: litmuschaos.io/v1alpha1
 kind: ChaosEngine
 metadata:
-  name: catalogue-experiments
+  name: carts-experiments
   namespace: litmus
 spec:
   annotationCheck: 'false'
@@ -10,26 +10,32 @@ spec:
   auxiliaryAppInfo: ''
   appinfo:
     appns: 'sock-shop'
-    applabel: 'name=catalogue'
+    applabel: 'name=carts'
     appkind: 'deployment'
   chaosServiceAccount: litmus-admin
   experiments:
-    - name: pod-cpu-hog
+    - name: pod-network-latency
       spec:
         components:
           env:
             - name: APP_NAMESPACE
               value: 'sock-shop'
             - name: APP_LABEL
-              value: 'name=catalogue'
+              value: 'name=carts'
             - name: APP_KIND
               value: 'deployment'
-             
-            - name: PODS_AFFECTED_PERC
-              value: "100"  
+
             - name: TARGET_CONTAINER
-              value: 'catalogue'
-            - name: CPU_CORES
-              value: '2'
+              value: 'carts'
+            - name: NETWORK_INTERFACE
+              value: 'eth0'
+            - name: NETWORK_LATENCY
+              value: '200'
             - name: TOTAL_CHAOS_DURATION
               value: '240'
+            - name: PODS_AFFECTED_PERC
+              value: "100"  
+            - name: CONTAINER_RUNTIME
+              value: 'containerd'
+            - name: SOCKET_PATH
+              value: '/run/containerd/containerd.sock'

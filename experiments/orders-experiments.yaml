@@ -1,0 +1,35 @@
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: orders-experiments
+  namespace: litmus
+spec:
+  annotationCheck: 'false'
+  engineState: 'active'
+  monitoring: true
+  auxiliaryAppInfo: ''
+  appinfo:
+    appns: 'sock-shop'
+    applabel: 'name=orders'
+    appkind: 'deployment'
+  chaosServiceAccount: litmus-admin
+  experiments:
+    - name: pod-delete
+      spec:
+        components:
+          env:
+          - name: APP_NAMESPACE
+            value: sock-shop
+          - name: APP_LABEL
+            value: name=orders
+          - name: APP_KIND
+            value: deployment
+
+          - name: TOTAL_CHAOS_DURATION
+            value: "60"
+          - name: CHAOS_INTERVAL
+            value: "30" 
+          - name: PODS_AFFECTED_PERC   
+            value: "100"
+          - name: FORCE 
+            value: "true"
