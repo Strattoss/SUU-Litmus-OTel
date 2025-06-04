@@ -488,7 +488,7 @@ Events:
 
 ## 9. Using AI in the project
 
-We only used AI to inspire about demo app.
+Did not use any AI.
 
 ## 10. Summary – conclusions
 
@@ -510,4 +510,13 @@ https://docs.litmuschaos.io/docs/introduction/what-is-litmus
 ```
 ```
 https://dev.to/sunitparekh/step-by-step-guide-to-chaos-testing-using-litmus-chaos-toolkit-77l
+```
+```
+https://litmuschaos.github.io/litmus/experiments/categories/contents/
+```
+```
+https://github.com/litmuschaos/chaos-charts/tree/master
+```
+```
+https://github.com/ocp-power-demos/sock-shop-demo
 ```
