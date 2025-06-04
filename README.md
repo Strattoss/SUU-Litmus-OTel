@@ -48,27 +48,27 @@ As Litmus documentation says: 'Keep verifying is the key. Robust testing before 
 
 ## 3. Case study concept description
 
-Hypothesis: Sock Shop sustains p95 latency < 500 ms and HTTP 5xx ≤ 1 % while facing:
-
-1. Random pod deletion (***pod-delete***).
-
-2. 200 ms inter‑service network latency (***network-latency***).
+Hypothesis: Sock Shop sustains **p95 latency < 2 s** while facing various faults.
 
 The experiment workflow:
 
-1. Establish steady‑state via load generator (50 RPS - Requests Per Second).
+1. Establish steady‑state via load generator (3.5k QPS - Queries Per Second).
 
 2. Inject the fault with Litmus CRDs.
 
 3. Observe real‑time traces & metrics in Grafana.
 
-4. Compare KPIs (Key Performance Indicator - A measurable value that shows how well a system is performing, e.g p95 **latency < 500 ms** or  **HTTP 5xx < 1%** )  against the hypothesis and produce a verdict (Pass / Fail).
+4. Compare KPIs (Key Performance Indicator - A measurable value that shows how well a system is performing, e.g p95 **latency < 2 s** or  **HTTP 5xx < 1%** )  against the hypothesis and produce a verdict (Pass / Fail).
 
-**Experiment:**
-Introducing 200 ms inter-service network latency to existing microservices cluster. 
-
+**Experiments:**
+1. Introduce 200 ms carts pods network latency to existing microservices cluster for 4 minutes.
 ![Fault point 1; network latency](./images/fault-point-1.png)
-![Fault point 2; pod deletion](./images/fault-point-2.png)
+
+2. Introduce load on CPUs of catalogue pods for 4 minutes.
+![Fault point 2; cpu hog](./images/fault-point-2.png)
+
+3. Keep deleting orders pods for 2 minutes.
+![Fault point 3; pod deletion](./images/fault-point-3.png)
 
 
 ## 4. Solution architecture
@@ -243,15 +243,11 @@ kubectl logs <pod-name> -n litmus
 
 ### 4. Results presentation
 
-The Litmus Chaos experiments were successfully executed and monitored using Grafana dashboards. Three different types of faults were injected: `pod-cpu-hog`, `pod-delete`, and `pod-network-latency`. All chaos experiments completed successfully without failures.
+The Litmus Chaos experiments were successfully executed and monitored using Grafana dashboards. Three different types of faults were injected: `pod-cpu-hog`, `pod-delete`, and `pod-network-latency`. All chaos experiments completed successfully without failures (no chaos experiment probe failures).
 
-**Chaos Experiments Injection**:
-  Each of the three experiments was triggered and shown in the "Chaos Experiments" panel with one injection per fault type.
+Each of the three experiments was triggered and shown in the "Chaos Experiments" panel with one injection per fault type.
 
 ![grafana-experiments](./images/grafana-experiments.png)
-
-<!-- ![grafana-experiments-pods-affected](./images/grafana-experiments-pods-affected.png)
-![catalogue-latency-p95-less-500ms](./images/catalogue-latency-p95-less-500ms.png) -->
 
 #### Carts experiment (pod-network-latency) description
 
