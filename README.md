@@ -488,6 +488,35 @@ Events:
 
 ## 9. Using AI in the project
 
+Did not use any AI.
+
 ## 10. Summary – conclusions
 
+In this project, we demonstrated how chaos engineering and observability tools can be effectively used together to assess the resilience of Kubernetes-based microservices app. By leveraging Litmus Chaos we were able to simulate faults like pod deleting and inter-service latency and watch how they affect using OpenTelemetry, Prometheus, Grafana.
+
+The Sock Shop served for us as an ideal workload due to its realistic and modular microservices architecture. We were able to collect detailed metrics and visualize service dependencies, errors and usage. We validated our hypothesis that the system can maintain acceptable performance thresholds under fault conditions. We can affirm that by KPIs such as p95 latency and HTTP 5xx errors rate.
+
+The whole environment we built in amazon Web services, precisely Amazon Elastic Kubernetes Service (EKS). We developed there Sock Shop, Litmus and services for tracking metrics.
+
+
+Concluding, Litmus shown as a great and convenient tool for testing our app under difficult conditions, also as Chaos engineering definition says under faults.
+Also observability was essential for anything we have done. Allowing us to analyse system behavior.
+
+
 ## 11. References
+
+```
+https://docs.litmuschaos.io/docs/introduction/what-is-litmus
+```
+```
+https://dev.to/sunitparekh/step-by-step-guide-to-chaos-testing-using-litmus-chaos-toolkit-77l
+```
+```
+https://litmuschaos.github.io/litmus/experiments/categories/contents/
+```
+```
+https://github.com/litmuschaos/chaos-charts/tree/master
+```
+```
+https://github.com/ocp-power-demos/sock-shop-demo
+```
