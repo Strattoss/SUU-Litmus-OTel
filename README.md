@@ -48,7 +48,7 @@ As Litmus documentation says: 'Keep verifying is the key. Robust testing before 
 
 ## 3. Case study concept description
 
-Hypothesis: Sock Shop sustains **p95 latency < 2 s** while facing various faults.
+Hypothesis: Sock Shop sustains **p99 latency < 2 s** while facing various faults.
 
 The experiment workflow:
 
@@ -58,7 +58,7 @@ The experiment workflow:
 
 3. Observe real‑time traces & metrics in Grafana.
 
-4. Compare KPIs (Key Performance Indicator - A measurable value that shows how well a system is performing, e.g p95 **latency < 2 s** or  **HTTP 5xx < 1%** )  against the hypothesis and produce a verdict (Pass / Fail).
+4. Compare KPIs (Key Performance Indicator - A measurable value that shows how well a system is performing, e.g p99 **latency < 2 s** or  **HTTP 5xx < 1%** )  against the hypothesis and produce a verdict (Pass / Fail).
 
 **Experiments:**
 1. Introduce 200 ms carts pods network latency to existing microservices cluster for 4 minutes.
@@ -73,7 +73,7 @@ The experiment workflow:
 
 ## 4. Solution architecture
 
-The application will be run on Amazon Web Service leveraging the Elastic Kubernetes Service. The business application, as mentioned in the previous section 1., will be the [SockShop](https://github.com/ocp-power-demos/sock-shop-demo), used widely as a demo application because of its microservice-centered structure. 
+The application will be run on Amazon Web Service leveraging the Elastic Kubernetes Service. The business application, as mentioned in the previous sections, will be the [SockShop](https://github.com/ocp-power-demos/sock-shop-demo), used widely as a demo application because of its microservice-centered structure. 
 
 SockShop architecture schema:
 
@@ -252,6 +252,9 @@ Each of the three experiments was triggered and shown in the "Chaos Experiments"
 #### Carts experiment (pod-network-latency) description
 
 ![grafana-metrics-cart](./images/grafana-metrics-cart.png)
+![grafana-metrics-frontend](./images/grafana-metrics-frontend.png)
+
+The increase in carts service latency is well visible. Nonetheless, the p99 latency did not exceede 2s, as assumed in the hypothesis.
 
 ```yaml
 ❯ kubectl describe chaosengine carts-experiments -n litmus
@@ -332,6 +335,9 @@ Events:
 #### Catalogue experiment (pod-cpu-hog) description
 
 ![grafana-metrics-catalogue](./images/grafana-metrics-catalogue.png)
+![grafana-metrics-frontend](./images/grafana-metrics-frontend.png)
+
+The catalogue cpu hog experiment lasted from around 21:50 to 21:54, which is slightly visible in both catalogue plots. It seems like this experiment has very insignificant impact on frontend latency (even p99), so the hypothesis definitely holds.
 
 ```yaml
 ❯ kubectl describe chaosengine catalogue-experiments -n litmus
@@ -406,6 +412,9 @@ Events:
 #### Orders experiment (pod-delete) description
 
 ![grafana-metrics-orders](./images/grafana-metrics-orders.png)
+![grafana-metrics-frontend](./images/grafana-metrics-frontend.png)
+
+The orders QPS plot and latency plot show that from 21:55 to 21:58 the orders pods did not report any metrics, so we can conclude that the experiments did run successfuly and all of them were deleted. What's significant about this experiment is that the frontend latency drastically increased - to around 5 s at the peak. It's well above the assumed 2 s, and so this fault was revealed to be unacceptable. Thus, additional steps regarding orders pods deletions would be recommended.
 
 ```yaml
 ❯ kubectl describe chaosengine orders-experiments -n litmus
@@ -476,15 +485,6 @@ Events:
   Normal  ChaosEngineCompleted       5m49s (x2 over 47m)  chaos-operator             ChaosEngine completed, will delete or retain the resources according to jobCleanUpPolicy
 
 ```
-
-**System Behavior Metrics**:
-
-* **Catalogue QPS** temporarily dropped during the `pod-delete` fault injection.
-* **Catalogue Latency** briefly spiked during the `pod-network-latency` injection, with the 99th percentile reaching approximately 2 seconds.
-
-* **Catalogue p95 Latency** temporarily increased during the `pod-network-latency` injection, peaking at **495 ms around 15:34:30**, but remained **within the hypothesis threshold (p95 < 500 ms)**.
-
-
 
 ## 9. Using AI in the project
 
